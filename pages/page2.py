@@ -324,7 +324,8 @@ else:
         # ---- 정답을 맞힌 경우 ----
         elif st.session_state.status == "correct":
             st.success("정답입니다! 🎉")
-            st.latex(rf"{n} = {format_factorization(correct_factors, sep=' \\times ')}")
+            latex_expr = format_factorization(correct_factors, sep=' \\times ')
+            st.latex(f"{n} = {latex_expr}")
             if st.button("다음 문제 ▶", key=f"next_correct_{idx}"):
                 st.session_state.q_index += 1
                 st.session_state.attempt = 1
@@ -335,7 +336,8 @@ else:
         elif st.session_state.status == "finished_wrong":
             st.error("틀렸습니다.")
             st.markdown(f"**정답:** {n} = {correct_str}")
-            st.latex(rf"{n} = {format_factorization(correct_factors, sep=' \\times ')}")
+            latex_expr = format_factorization(correct_factors, sep=' \\times ')
+            st.latex(f"{n} = {latex_expr}")
             if st.button("다음 문제 ▶", key=f"next_wrong_{idx}"):
                 st.session_state.q_index += 1
                 st.session_state.attempt = 1

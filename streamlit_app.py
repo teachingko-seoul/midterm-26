@@ -1,151 +1,312 @@
 import streamlit as st
-import pandas as pd
-import math
-from pathlib import Path
 
-# Set the title and favicon that appear in the Browser's tab bar.
+# ----------------------------------------------------------------------------
+# 페이지 기본 설정
+# ----------------------------------------------------------------------------
 st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+    page_title="고진홍과 함께 하는 2026학년도 중학교 1학년 1학기 수학",
+    page_icon="📐",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
-
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
-
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
+# ----------------------------------------------------------------------------
+# 커스텀 CSS (제목 강조, 카드 스타일 등)
+# ----------------------------------------------------------------------------
+st.markdown(
     """
+    <style>
+    .main-title {
+        font-size: 44px;
+        font-weight: 900;
+        text-align: center;
+        color: #1E3A8A;
+        padding: 24px 10px 8px 10px;
+        line-height: 1.35;
+    }
+    .sub-title {
+        font-size: 20px;
+        text-align: center;
+        color: #475569;
+        padding-bottom: 20px;
+        font-weight: 500;
+    }
+    .unit-badge {
+        display: inline-block;
+        background: #2563EB;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    .goal-code {
+        display: inline-block;
+        background: #E0F2FE;
+        color: #0369A1;
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        margin-right: 8px;
+    }
+    .goal-box {
+        background: #F8FAFC;
+        border-left: 5px solid #2563EB;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 12px;
+    }
+    .tip-card {
+        background: #FFF7ED;
+        border: 1px solid #FDBA74;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+    }
+    .use-card {
+        background: #F0FDF4;
+        border: 1px solid #86EFAC;
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #F1F5F9;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
-
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
-
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
-
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
+# ----------------------------------------------------------------------------
+# 데이터: 단원별 성취기준
+# ----------------------------------------------------------------------------
+units = [
+    {
+        "name": "1. 소인수분해",
+        "icon": "🔢",
+        "summary": "자연수를 소수의 곱으로 쪼개어 수의 구조를 이해하는 단원이에요.",
+        "goals": [
+            ("9수01-01", "소인수분해의 뜻을 알고, 자연수를 소인수분해 할 수 있다."),
+            ("9수01-02", "소인수분해를 이용하여 최대공약수와 최소공배수를 구할 수 있다."),
+        ],
+    },
+    {
+        "name": "2. 정수와 유리수",
+        "icon": "➕➖",
+        "summary": "음수의 개념을 도입해 수의 범위를 확장하고, 사칙계산을 자유자재로 다루는 단원이에요.",
+        "goals": [
+            ("9수01-03", "다양한 상황을 이용하여 음수의 필요성을 인식하고, 양수와 음수, 정수와 유리수의 개념을 이해한다."),
+            ("9수01-04", "정수와 유리수의 대소 관계를 판단할 수 있다."),
+            ("9수01-05", "정수와 유리수의 사칙계산의 원리를 이해하고, 그 계산을 할 수 있다."),
+        ],
+    },
+    {
+        "name": "3. 문자와 식",
+        "icon": "🔤",
+        "summary": "문자를 사용해 규칙을 식으로 표현하고, 방정식을 풀어 문제를 해결하는 단원이에요.",
+        "goals": [
+            ("9수02-01", "다양한 상황을 문자를 사용한 식으로 나타내어 그 유용성을 인식하고, 식의 값을 구할 수 있다."),
+            ("9수02-02", "일차식의 덧셈과 뺄셈의 원리를 이해하고, 그 계산을 할 수 있다."),
+            ("9수02-03", "방정식과 그 해의 뜻을 알고, 등식의 성질을 설명할 수 있다."),
+            ("9수02-04", "일차방정식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다."),
+        ],
+    },
+    {
+        "name": "4. 좌표평면과 그래프",
+        "icon": "📈",
+        "summary": "순서쌍과 좌표를 이해하고, 두 양 사이의 관계를 표·식·그래프로 나타내는 단원이에요.",
+        "goals": [
+            ("9수02-05", "순서쌍과 좌표를 이해하고, 그 편리함을 인식할 수 있다."),
+            ("9수02-06", "다양한 상황을 그래프로 나타내고, 주어진 그래프를 해석할 수 있다."),
+            ("9수02-07", "정비례, 반비례 관계를 이해하고, 그 관계를 표, 식, 그래프로 나타낼 수 있다."),
+        ],
+    },
 ]
 
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
+# ----------------------------------------------------------------------------
+# 사이드바 네비게이션
+# ----------------------------------------------------------------------------
+st.sidebar.title("📚 목차")
+menu = st.sidebar.radio(
+    "이동할 항목을 선택하세요",
+    ["🏠 홈", "🎯 단원별 성취기준", "💡 효율적인 수학 공부법", "🌍 수학의 유용성"],
 )
 
-''
-''
+st.sidebar.markdown("---")
+st.sidebar.info(
+    "이 페이지는 **2026학년도 중학교 1학년 1학기 수학** 수업 안내 페이지입니다.\n\n"
+    "각 단원의 학습 내용을 확인하고, 이후 단원별 학습 자료와 퀴즈 페이지로 이동해 보세요!"
+)
 
+# ----------------------------------------------------------------------------
+# 제목
+# ----------------------------------------------------------------------------
+st.markdown(
+    '<div class="main-title">고진홍과 함께 하는<br>2026학년도 중학교 1학년 1학기 수학</div>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<div class="sub-title">소인수분해 · 정수와 유리수 · 문자와 식 · 좌표평면과 그래프</div>',
+    unsafe_allow_html=True,
+)
+st.divider()
 
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
+# ----------------------------------------------------------------------------
+# 홈
+# ----------------------------------------------------------------------------
+if menu == "🏠 홈":
+    st.header("👋 환영합니다!")
+    st.write(
+        """
+        중학교 1학년 1학기 수학은 **초등학교 수학과 중학교 수학을 잇는 다리**와 같은 학기예요.
+        숫자의 세계가 '자연수'에서 '정수와 유리수'로 넓어지고, 처음으로 '문자'를 이용해 식을 세우고
+        '방정식'을 풀게 됩니다. 그리고 좌표평면 위에서 두 양 사이의 관계를 그래프로 표현하는 방법까지 배우죠.
 
-st.header(f'GDP in {to_year}', divider='gray')
+        이 4가지 단원은 앞으로 배울 모든 중·고등학교 수학의 **기초 체력**이 됩니다.
+        아래 메뉴에서 단원별 성취기준, 효율적인 공부법, 수학의 유용성을 차례로 확인해 보세요.
+        """
+    )
 
-''
+    cols = st.columns(4)
+    for col, unit in zip(cols, units):
+        with col:
+            st.markdown(f"### {unit['icon']}")
+            st.markdown(f"**{unit['name']}**")
+            st.caption(unit["summary"])
 
-cols = st.columns(4)
+    st.divider()
+    st.subheader("📌 이 학기, 이렇게 흘러갑니다")
+    st.markdown(
+        """
+        1. **소인수분해**로 수의 구조를 뜯어보고
+        2. **정수와 유리수**로 수의 세계를 음수까지 넓힌 뒤
+        3. **문자와 식**으로 상황을 수식으로 표현하고 방정식을 풀고
+        4. **좌표평면과 그래프**로 두 양의 관계를 시각적으로 이해합니다.
 
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
+        각 단원은 이전 단원의 개념 위에 쌓이므로, **순서대로 차근차근** 학습하는 것이 가장 효과적이에요.
+        """
+    )
 
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
+# ----------------------------------------------------------------------------
+# 단원별 성취기준
+# ----------------------------------------------------------------------------
+elif menu == "🎯 단원별 성취기준":
+    st.header("🎯 단원별 성취기준")
+    st.write("각 단원에서 '무엇을 할 수 있어야 하는지'를 성취기준을 통해 직관적으로 확인해 보세요.")
+    st.write("")
 
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
+    tabs = st.tabs([f"{u['icon']} {u['name']}" for u in units])
+    for tab, unit in zip(tabs, units):
+        with tab:
+            st.markdown(f'<span class="unit-badge">{unit["name"]}</span>', unsafe_allow_html=True)
+            st.write(unit["summary"])
+            st.markdown("#### 이 단원을 마치면, 여러분은 …")
+            for code, desc in unit["goals"]:
+                st.markdown(
+                    f"""
+                    <div class="goal-box">
+                        <span class="goal-code">{code}</span>{desc}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
+    st.divider()
+    with st.expander("📋 전체 성취기준 한눈에 보기 (표)"):
+        for unit in units:
+            st.markdown(f"**{unit['icon']} {unit['name']}**")
+            for code, desc in unit["goals"]:
+                st.markdown(f"- `{code}` {desc}")
+            st.write("")
+
+# ----------------------------------------------------------------------------
+# 효율적인 수학 공부법
+# ----------------------------------------------------------------------------
+elif menu == "💡 효율적인 수학 공부법":
+    st.header("💡 효율적으로 수학 공부하는 방법")
+    st.write("수학은 '외우는 과목'이 아니라 '이해하고 연습하는 과목'이에요. 다음 5가지 원칙을 기억하세요!")
+
+    tips = [
+        ("1️⃣ 개념부터 정확히 이해하기",
+         "공식을 외우기 전에 '왜 그런지'를 먼저 이해하세요. 예를 들어 최소공배수를 구할 때, "
+         "공식을 외우기보다 소인수분해로 직접 구해보며 원리를 익히면 훨씬 오래 기억됩니다."),
+        ("2️⃣ 매일 조금씩, 꾸준히 연습하기",
+         "수학은 벼락치기가 가장 안 통하는 과목이에요. 하루 20~30분씩 꾸준히 문제를 풀면, "
+         "시험 전 몰아서 8시간 공부하는 것보다 훨씬 효과적입니다."),
+        ("3️⃣ 틀린 문제는 '오답노트'로 다시 보기",
+         "맞은 문제보다 틀린 문제가 훨씬 중요한 정보예요. 왜 틀렸는지 원인을 분석하고, "
+         "일주일 뒤 다시 풀어보며 확실히 내 것으로 만드세요."),
+        ("4️⃣ 손으로 직접 풀어보기",
+         "눈으로 풀이를 읽기만 하면 이해했다고 착각하기 쉬워요. 반드시 연필을 들고 "
+         "직접 계산 과정을 써 내려가며 연습하세요."),
+        ("5️⃣ 배운 개념을 서로 연결하기",
+         "소인수분해는 최대공약수·최소공배수로, 정수와 유리수는 문자와 식의 계산으로 이어집니다. "
+         "새로운 단원을 배울 때 '이전에 배운 것과 어떻게 연결되는지' 생각해 보세요."),
+    ]
+
+    for title, desc in tips:
+        st.markdown(
+            f"""
+            <div class="tip-card">
+                <b>{title}</b><br>{desc}
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+
+    st.divider()
+    st.info(
+        "💬 **선생님의 한마디**: 수학은 재능보다 '태도'의 과목입니다. "
+        "틀리는 것을 두려워하지 말고, 틀린 이유를 찾아가는 과정 자체를 즐겨보세요!"
+    )
+
+# ----------------------------------------------------------------------------
+# 수학의 유용성
+# ----------------------------------------------------------------------------
+elif menu == "🌍 수학의 유용성":
+    st.header("🌍 수학, 우리 삶에 어떻게 쓰일까요?")
+    st.write("이번 학기에 배우는 개념들이 실제로 어디에 쓰이는지 살펴보면, 수학이 훨씬 재미있어져요!")
+
+    uses = [
+        ("🔐 소인수분해 → 인터넷 보안",
+         "온라인 쇼핑, 인터넷 뱅킹의 암호(RSA 암호화)는 아주 큰 수를 소인수분해하기 어렵다는 원리를 이용해요. "
+         "여러분이 배우는 소인수분해가 실제로 우리의 개인정보를 지켜주는 셈이죠."),
+        ("🌡️ 정수와 유리수 → 온도, 해발고도, 금융",
+         "일기예보의 영하 기온, 해수면 아래 깊이, 통장의 잔액과 대출금 등 우리 주변의 수많은 정보가 "
+         "음수와 양수, 즉 정수와 유리수로 표현됩니다."),
+        ("🧮 문자와 식 → 프로그래밍과 데이터 분석",
+         "문자를 사용해 식을 세우는 것은 프로그래밍에서 변수를 사용하는 것과 똑같은 원리예요. "
+         "방정식을 푸는 논리적 사고 과정은 코딩, 인공지능, 데이터 분석의 기초가 됩니다."),
+        ("🗺️ 좌표평면과 그래프 → 지도, 게임, 빅데이터 시각화",
+         "내비게이션의 GPS 좌표, 게임 속 캐릭터의 위치, 주식 그래프, 인구 통계 그래프까지 — "
+         "세상의 수많은 정보가 좌표평면 위의 그래프로 표현되고 분석됩니다."),
+    ]
+
+    for title, desc in uses:
+        st.markdown(
+            f"""
+            <div class="use-card">
+                <b>{title}</b><br>{desc}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+    st.success(
+        "✨ 수학은 교실 안에만 있는 학문이 아니라, 스마트폰 속 암호부터 일기예보, "
+        "게임, 인공지능까지 세상 곳곳에서 작동하고 있어요. 오늘 배우는 개념 하나하나가 "
+        "여러분의 미래를 만드는 도구가 됩니다!"
+    )
+
+# ----------------------------------------------------------------------------
+# 하단 안내
+# ----------------------------------------------------------------------------
+st.divider()
+st.caption(
+    "ⓒ 2026 고진홍과 함께 하는 중학교 1학년 1학기 수학 | "
+    "본 페이지는 단원별 학습 자료 및 퀴즈 페이지와 함께 사용됩니다."
+)
