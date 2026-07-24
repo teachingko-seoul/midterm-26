@@ -145,7 +145,7 @@ st.sidebar.info(
 # 제목
 # ----------------------------------------------------------------------------
 st.markdown(
-    '<div class="main-title">고진홍과 함께 하는<br>2026학년도 중학교 1학년 1학기 수학</div>',
+    '<div class="main-title">고진홍샘과 함께 하는<br>2026학년도 중학교 1학년 1학기 수학</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
