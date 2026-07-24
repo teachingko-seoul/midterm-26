@@ -4,7 +4,7 @@ import streamlit as st
 # 페이지 기본 설정
 # ----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="고진홍과 함께 하는 2026학년도 중학교 1학년 1학기 수학",
+    page_title="고진홍샘과 함께 하는 2026학년도 중학교 1학년 1학기 수학",
     page_icon="📐",
     layout="wide",
     initial_sidebar_state="expanded",
